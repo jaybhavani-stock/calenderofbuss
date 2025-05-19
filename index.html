@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ધંધાકીય હિસાબ</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f3f4f6, #e0f7fa);
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+      background: linear-gradient(to right, #00796b, #004d40);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+
+    select,
+    input[type='month'] {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      background: transparent;
+    }
+
+    th {
+      background: #004d40;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      border-radius: 8px 8px 0 0;
+    }
+
+    td {
+      background: white;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 0;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    tr:hover td {
+      transform: scale(1.01);
+      box-shadow: 0 4px 10px rgba(0, 150, 136, 0.2);
+    }
+
+    input[type='number'] {
+      width: 100px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .day {
+      color: #555;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    #totalRow td {
+      font-weight: bold;
+      background: #b2dfdb;
+      box-shadow: none;
+      text-align: right;
+    }
+
+    #totalRow td:first-child {
+      text-align: left;
+    }
+
+    #showTotalBtn {
+      margin: 15px 0;
+      background: #004d40;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    #showTotalBtn:hover {
+      background: #00796b;
+    }
+
+    @media (max-width: 600px) {
+      input[type='number'] {
+        width: 80px;
+      }
+      .day {
+        display: block;
+      }
+      td,
+      th {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>ધંધાકીય હિસાબ</h1>
+
+  <label>મહિનો પસંદ કરો:</label>
+  <input type="month" id="monthPicker" />
+
+  <button id="showTotalBtn">ટોટલ બતાવો</button>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>તારીખ</th>
+        <th>દિવસ</th>
+        <th>આવક ₹</th>
+        <th>ખર્ચ ₹</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <!-- Grand total row injected here -->
+    </tfoot>
+  </table>
+
+  <script>
+    const monthPicker = document.getElementById('monthPicker');
+    const tableBody = document.querySelector('#dataTable tbody');
+    const tableFoot = document.querySelector('#dataTable tfoot');
+    const showTotalBtn = document.getElementById('showTotalBtn');
+
+    let data = JSON.parse(localStorage.getItem('businessData') || '{}');
+
+    const days = [
+      'રવિવાર',
+      'સોમવાર',
+      'મંગળવાર',
+      'બુધવાર',
+      'ગુરુવાર',
+      'શુક્રવાર',
+      'શનિવાર',
+    ];
+
+    monthPicker.addEventListener('change', generateTable);
+    showTotalBtn.addEventListener('click', showTotals);
+
+    // Auto load current month
+    monthPicker.value = new Date().toISOString().slice(0, 7);
+    generateTable();
+
+    function generateTable() {
+      const [year, month] = monthPicker.value.split('-');
+      const totalDays = new Date(year, month, 0).getDate();
+      tableBody.innerHTML = '';
+      tableFoot.innerHTML = '';  // Clear totals row on new table generate
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(
+          2,
+          '0'
+        )}`;
+        const dayName = days[new Date(dateStr).getDay()];
+
+        const income = data[dateStr]?.income || '';
+        const expense = data[dateStr]?.expense || '';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${day}/${month}/${year}</td>
+          <td class="day">${dayName}</td>
+          <td><input type="number" value="${income}" onchange="saveValue('${dateStr}', 'income', this.value)" /></td>
+          <td><input type="number" value="${expense}" onchange="saveValue('${dateStr}', 'expense', this.value)" /></td>
+        `;
+        tableBody.appendChild(row);
+      }
+    }
+
+    function saveValue(date, type, value) {
+      if (!data[date]) data[date] = { income: 0, expense: 0 };
+      data[date][type] = parseFloat(value) || 0;
+      localStorage.setItem('businessData', JSON.stringify(data));
+    }
+
+    function showTotals() {
+      const [year, month] = monthPicker.value.split('-');
+      const totalDays = new Date(year, month, 0).getDate();
+
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(
+          2,
+          '0'
+        )}`;
+        if (data[dateStr]) {
+          totalIncome += data[dateStr].income || 0;
+          totalExpense += data[dateStr].expense || 0;
+        }
+      }
+
+      tableFoot.innerHTML = `
+        <tr id="totalRow">
+          <td colspan="2">કુલ ટોટલ</td>
+          <td>₹ ${totalIncome.toFixed(2)}</td>
+          <td>₹ ${totalExpense.toFixed(2)}</td>
+        </tr>
+      `;
+    }
+  </script>
+</body>
+</html>
