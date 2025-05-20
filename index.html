@@ -101,6 +101,10 @@
       background: #00796b;
     }
 
+    .sunday {
+      background-color: #ffebee !important;
+    }
+
     @media (max-width: 600px) {
       input[type='number'] {
         width: 80px;
@@ -167,19 +171,20 @@
       const [year, month] = monthPicker.value.split('-');
       const totalDays = new Date(year, month, 0).getDate();
       tableBody.innerHTML = '';
-      tableFoot.innerHTML = '';  // Clear totals row on new table generate
+      tableFoot.innerHTML = '';
 
       for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(
-          2,
-          '0'
-        )}`;
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayName = days[new Date(dateStr).getDay()];
 
         const income = data[dateStr]?.income || '';
         const expense = data[dateStr]?.expense || '';
 
         const row = document.createElement('tr');
+        if (dayName === 'રવિવાર') {
+          row.classList.add('sunday');
+        }
+
         row.innerHTML = `
           <td>${day}/${month}/${year}</td>
           <td class="day">${dayName}</td>
@@ -204,10 +209,7 @@
       let totalExpense = 0;
 
       for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(
-          2,
-          '0'
-        )}`;
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         if (data[dateStr]) {
           totalIncome += data[dateStr].income || 0;
           totalExpense += data[dateStr].expense || 0;
