@@ -1,50 +1,146 @@
 <!DOCTYPE html>
 <html lang="gu">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ધંધાકીય હિસાબ</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f3f4f6, #e0f7fa);
+      padding: 20px;
     }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+      background: linear-gradient(to right, #00796b, #004d40);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+
+    select,
+    input[type='month'] {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
     table {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      background: transparent;
     }
-    th, td {
-      border: 1px solid #ccc;
+
+    th {
+      background: #004d40;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      border-radius: 8px 8px 0 0;
+    }
+
+    td {
+      background: white;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 0;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    tr:hover td {
+      transform: scale(1.01);
+      box-shadow: 0 4px 10px rgba(0, 150, 136, 0.2);
+    }
+
+    input[type='number'] {
+      width: 100px;
       padding: 8px;
-      text-align: center;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
     }
-    input[type="number"] {
-      width: 70px;
+
+    .day {
+      color: #555;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    #totalRow td {
+      font-weight: bold;
+      background: #b2dfdb;
+      box-shadow: none;
       text-align: right;
     }
-    .green {
-      color: green;
+
+    #totalRow td:first-child {
+      text-align: left;
     }
-    .red {
-      color: red;
-    }
-    .arrow-button {
-      background: none;
+
+    #showTotalBtn {
+      margin: 15px 0;
+      background: #004d40;
+      color: white;
       border: none;
-      font-size: 18px;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 8px;
       cursor: pointer;
-      vertical-align: middle;
+      transition: background 0.3s ease;
     }
-    .income-expense-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
+
+    #showTotalBtn:hover {
+      background: #00796b;
+    }
+
+    /* Sunday full red row */
+    .sunday td {
+      background-color: #ffebee !important;
+      color: #d32f2f !important;
+      font-weight: bold;
+    }
+
+    /* Income and Expense color text only */
+    .income-color {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .expense-color {
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      input[type='number'] {
+        width: 80px;
+      }
+      .day {
+        display: block;
+      }
+      td,
+      th {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
+  <h1>ધંધાકીય હિસાબ</h1>
 
-  <h2>ધંધાકીય હિસાબ</h2>
+  <label>મહિનો પસંદ કરો:</label>
+  <input type="month" id="monthPicker" />
+
+  <button id="showTotalBtn">ટોટલ બતાવો</button>
+
   <table id="dataTable">
     <thead>
       <tr>
@@ -54,83 +150,98 @@
         <th>ખર્ચ ₹</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Rows inserted dynamically -->
-    </tbody>
+    <tbody></tbody>
+    <tfoot></tfoot>
   </table>
 
   <script>
-    const dates = [
-      { date: '1/05/2025', day: 'બુધવાર' },
-      { date: '2/05/2025', day: 'ગુરૂવાર' },
-      { date: '3/05/2025', day: 'શુક્રવાર' },
-      { date: '4/05/2025', day: 'શનિવાર' },
-      { date: '5/05/2025', day: 'રવિવાર' },
-      { date: '6/05/2025', day: 'સોમવાર' },
-      { date: '7/05/2025', day: 'મંગળવાર' },
-      { date: '8/05/2025', day: 'બુધવાર' },
-    ];
-
+    const monthPicker = document.getElementById('monthPicker');
     const tableBody = document.querySelector('#dataTable tbody');
+    const tableFoot = document.querySelector('#dataTable tfoot');
+    const showTotalBtn = document.getElementById('showTotalBtn');
 
-    dates.forEach(({ date, day }, index) => {
-      const row = document.createElement('tr');
+    let data = JSON.parse(localStorage.getItem('businessData') || '{}');
 
-      const dateCell = document.createElement('td');
-      dateCell.textContent = date;
+    const days = ['રવિવાર','સોમવાર','મંગળવાર','બુધવાર','ગુરુવાર','શુક્રવાર','શનિવાર'];
 
-      const dayCell = document.createElement('td');
-      dayCell.textContent = day;
+    monthPicker.addEventListener('change', generateTable);
+    showTotalBtn.addEventListener('click', showTotals);
 
-      const incomeCell = document.createElement('td');
-      const incomeContainer = document.createElement('div');
-      incomeContainer.classList.add('income-expense-container');
+    // Auto load current month
+    monthPicker.value = new Date().toISOString().slice(0, 7);
+    generateTable();
 
-      const incomeInput = document.createElement('input');
-      incomeInput.type = 'number';
-      incomeInput.addEventListener('input', () => {
-        incomeInput.classList.toggle('green', incomeInput.value !== "");
-      });
+    function generateTable() {
+      const [year, month] = monthPicker.value.split('-');
+      const totalDays = new Date(year, month, 0).getDate();
+      tableBody.innerHTML = '';
+      tableFoot.innerHTML = '';
 
-      const incomeArrow = document.createElement('button');
-      incomeArrow.innerHTML = '↩️';
-      incomeArrow.className = 'arrow-button';
-      incomeArrow.onclick = () => openDetailsPage(date, 'income');
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayName = days[new Date(dateStr).getDay()];
+        const income = data[dateStr]?.income || '';
+        const expense = data[dateStr]?.expense || '';
 
-      incomeContainer.appendChild(incomeInput);
-      incomeContainer.appendChild(incomeArrow);
-      incomeCell.appendChild(incomeContainer);
+        const row = document.createElement('tr');
+        if (dayName === 'રવિવાર') {
+          row.classList.add('sunday');
+        }
 
-      const expenseCell = document.createElement('td');
-      const expenseContainer = document.createElement('div');
-      expenseContainer.classList.add('income-expense-container');
+        row.innerHTML = `
+          <td>${day}/${month}/${year}</td>
+          <td class="day">${dayName}</td>
+          <td><input type="number" value="${income}" class="${income ? 'income-color' : ''}" onchange="handleChange(event, '${dateStr}', 'income')" /></td>
+          <td><input type="number" value="${expense}" class="${expense ? 'expense-color' : ''}" onchange="handleChange(event, '${dateStr}', 'expense')" /></td>
+        `;
+        tableBody.appendChild(row);
+      }
+    }
 
-      const expenseInput = document.createElement('input');
-      expenseInput.type = 'number';
-      expenseInput.addEventListener('input', () => {
-        expenseInput.classList.toggle('red', expenseInput.value !== "");
-      });
+    function saveValue(date, type, value) {
+      if (!data[date]) data[date] = { income: 0, expense: 0 };
+      data[date][type] = parseFloat(value) || 0;
+      localStorage.setItem('businessData', JSON.stringify(data));
+    }
 
-      const expenseArrow = document.createElement('button');
-      expenseArrow.innerHTML = '↩️';
-      expenseArrow.className = 'arrow-button';
-      expenseArrow.onclick = () => openDetailsPage(date, 'expense');
+    function handleChange(event, date, type) {
+      const value = event.target.value;
+      saveValue(date, type, value);
 
-      expenseContainer.appendChild(expenseInput);
-      expenseContainer.appendChild(expenseArrow);
-      expenseCell.appendChild(expenseContainer);
+      // Remove previous colors
+      event.target.classList.remove('income-color', 'expense-color');
 
-      row.appendChild(dateCell);
-      row.appendChild(dayCell);
-      row.appendChild(incomeCell);
-      row.appendChild(expenseCell);
+      if (value.trim() !== '') {
+        if (type === 'income') {
+          event.target.classList.add('income-color');
+        } else if (type === 'expense') {
+          event.target.classList.add('expense-color');
+        }
+      }
+    }
 
-      tableBody.appendChild(row);
-    });
+    function showTotals() {
+      const [year, month] = monthPicker.value.split('-');
+      const totalDays = new Date(year, month, 0).getDate();
 
-    function openDetailsPage(date, type) {
-      const url = `details.html?date=${encodeURIComponent(date)}&type=${type}`;
-      window.open(url, '_blank');
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (data[dateStr]) {
+          totalIncome += data[dateStr].income || 0;
+          totalExpense += data[dateStr].expense || 0;
+        }
+      }
+
+      tableFoot.innerHTML = `
+        <tr id="totalRow">
+          <td colspan="2">કુલ ટોટલ</td>
+          <td>₹ ${totalIncome.toFixed(2)}</td>
+          <td>₹ ${totalExpense.toFixed(2)}</td>
+        </tr>
+      `;
     }
   </script>
 </body>
