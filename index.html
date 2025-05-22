@@ -111,6 +111,27 @@
     }
     button {
       cursor: pointer;
+      font-weight: bold;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    /* Light green for + buttons */
+    button[onclick^="openDetailDialog"] {
+      background-color: #a5d6a7;
+      color: #2e7d32;
+    }
+    /* Light red for - buttons */
+    button[onclick^="clearDetails"] {
+      background-color: #ef9a9a;
+      color: #c62828;
+    }
+    button[onclick^="openDetailDialog"]:hover {
+      background-color: #81c784;
+    }
+    button[onclick^="clearDetails"]:hover {
+      background-color: #e57373;
     }
     @media (max-width: 600px) {
       input[type='number'] {
@@ -136,6 +157,7 @@
         <th>દિવસ</th>
         <th>આવક ₹</th>
         <th>ખર્ચ ₹</th>
+        <th>Online Paisa ₹</th> <!-- New column -->
         <th>આવક actions</th>
         <th>ખર્ચ actions</th>
       </tr>
@@ -171,6 +193,19 @@
     monthPicker.addEventListener('change', generateTable);
     showTotalBtn.addEventListener('click', showTotals);
 
+    // Save onlinePaisa changes live
+    tableBody.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target && target.id.startsWith('onlinePaisa-')) {
+        const date = target.id.replace('onlinePaisa-', '');
+        const val = parseFloat(target.value) || 0;
+
+        if (!data[date]) data[date] = {};
+        data[date].onlinePaisa = val;
+        localStorage.setItem('businessData', JSON.stringify(data));
+      }
+    });
+
     monthPicker.value = new Date().toISOString().slice(0, 7);
     generateTable();
 
@@ -185,6 +220,7 @@
         const dayName = days[new Date(dateStr).getDay()];
         const income = data[dateStr]?.income || 0;
         const expense = data[dateStr]?.expense || 0;
+        const onlinePaisa = data[dateStr]?.onlinePaisa || 0;
 
         const row = document.createElement('tr');
         if (dayName === 'રવિવાર') row.classList.add('sunday');
@@ -194,13 +230,14 @@
           <td class="day">${dayName}</td>
           <td><input id="income-${dateStr}" type="number" value="${income}" class="income-color" readonly /></td>
           <td><input id="expense-${dateStr}" type="number" value="${expense}" class="expense-color" readonly /></td>
+          <td><input id="onlinePaisa-${dateStr}" type="number" value="${onlinePaisa}" placeholder="Online Paisa" /></td>
           <td>
-            <button style="background: green; color: white;" onclick="openDetailDialog('${dateStr}', 'income')">+</button>
-            <button style="background: red; color: white;" onclick="clearDetails('${dateStr}', 'income')">–</button>
+            <button onclick="openDetailDialog('${dateStr}', 'income')">+</button>
+            <button onclick="clearDetails('${dateStr}', 'income')">–</button>
           </td>
           <td>
-            <button style="background: green; color: white;" onclick="openDetailDialog('${dateStr}', 'expense')">+</button>
-            <button style="background: red; color: white;" onclick="clearDetails('${dateStr}', 'expense')">–</button>
+            <button onclick="openDetailDialog('${dateStr}', 'expense')">+</button>
+            <button onclick="clearDetails('${dateStr}', 'expense')">–</button>
           </td>
         `;
         tableBody.appendChild(row);
@@ -224,7 +261,7 @@
         entryList.appendChild(div);
       }
 
-      addEntry(); // Always have one blank
+      addEntry(); // Always one blank entry
       detailDialog.showModal();
     }
 
@@ -241,31 +278,34 @@
     function saveEntries() {
       const entries = [];
       let total = 0;
-      const all = entryList.querySelectorAll('.entry');
-      all.forEach(entry => {
-        const detail = entry.children[0].value.trim();
-        const price = parseFloat(entry.children[1].value) || 0;
-        if (detail !== '') {
+      const entryDivs = entryList.querySelectorAll('.entry');
+      entryDivs.forEach(div => {
+        const detailInput = div.children[0];
+        const priceInput = div.children[1];
+        const detail = detailInput.value.trim();
+        const price = parseFloat(priceInput.value) || 0;
+        if (detail && price > 0) {
           entries.push({ detail, price });
           total += price;
         }
       });
 
       if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate][currentType] = total;
       data[currentDate][`${currentType}_details`] = entries;
+      data[currentDate][currentType] = total;
 
       localStorage.setItem('businessData', JSON.stringify(data));
-      document.getElementById(`${currentType}-${currentDate}`).value = total.toFixed(2);
       detailDialog.close();
+      generateTable();
     }
 
     function clearDetails(date, type) {
-      if (!data[date]) return;
-      data[date][type] = 0;
-      data[date][`${type}_details`] = [];
-      localStorage.setItem('businessData', JSON.stringify(data));
-      document.getElementById(`${type}-${date}`).value = '';
+      if (data[date]) {
+        delete data[date][`${type}_details`];
+        data[date][type] = 0;
+        localStorage.setItem('businessData', JSON.stringify(data));
+        generateTable();
+      }
     }
 
     function showTotals() {
@@ -274,12 +314,14 @@
 
       let totalIncome = 0;
       let totalExpense = 0;
+      let totalOnlinePaisa = 0;
 
       for (let day = 1; day <= totalDays; day++) {
         const dateStr = `${year}-${month.padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         if (data[dateStr]) {
           totalIncome += data[dateStr].income || 0;
           totalExpense += data[dateStr].expense || 0;
+          totalOnlinePaisa += data[dateStr].onlinePaisa || 0;
         }
       }
 
@@ -288,6 +330,7 @@
           <td colspan="2">કુલ ટોટલ</td>
           <td>₹ ${totalIncome.toFixed(2)}</td>
           <td>₹ ${totalExpense.toFixed(2)}</td>
+          <td>₹ ${totalOnlinePaisa.toFixed(2)}</td>
           <td colspan="2"></td>
         </tr>
       `;
