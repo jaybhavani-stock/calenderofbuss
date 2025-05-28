@@ -1,651 +1,849 @@
 <!DOCTYPE html>
 <html lang="gu">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ધંધાકીય હિસાબ</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3HCJPE50TP"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-3HCJPE50TP'); // અહીં તમારો Measurement ID આવે છે
-  </script>
-
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #f3f4f6, #e0f7fa);
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 25px;
-      font-size: 32px;
-      background: linear-gradient(to right, #00796b, #004d40);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: bold;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap; /* નાના સ્ક્રીન પર wrapping માટે */
-      gap: 15px; /* કંટ્રોલ્સના ઘટકો વચ્ચે ગેપ - આને આપણે ઘટાડીશું */
-      margin-bottom: 20px;
-      align-items: flex-end; /* બધા ઘટકોને નીચેથી અલાઈન કરો (ઈનપુટ અને બટનો) */
-      justify-content: flex-start; /* બધાને ડાબી બાજુથી શરૂ કરો */
-    }
-    .month-picker-container { /* મહિનો પસંદ કરો માટે નવો કન્ટેનર */
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        /* flex-grow: 1; */ /* હવે આને દૂર કરીએ જેથી તે બહુ જગ્યા ન લે */
-        min-width: 200px; /* હજુ પણ એક મિનિમમ પહોળાઈ આપો */
-        margin-right: 10px; /* બટનોથી થોડી જગ્યા */
-    }
-    .controls label {
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
-      color: #004d40;
-    }
-    select, input[type='month'] {
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #a7d9d5;
-      border-radius: 8px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-      background-color: #ffffff;
-      width: auto; /* હવે 100% ને બદલે auto રાખો જેથી તે પોતાની કન્ટેન્ટ સાઈઝ લઈ શકે */
-      max-width: 250px; /* મહત્તમ પહોળાઈ સેટ કરો */
-    }
-    /* બટન કન્ટેનર માટે સ્ટાઇલ */
-    .control-buttons {
-        display: flex;
-        gap: 8px; /* બટનો વચ્ચેનો ગેપ વધુ ઘટાડ્યો */
-        align-self: flex-end; /* બટનોને નીચેથી અલાઈન રાખો */
-    }
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 10px; /* Rows વચ્ચે ગેપ */
-      margin-top: 20px;
-    }
-    th {
-      background: #004d40;
-      color: white;
-      padding: 14px;
-      text-align: left;
-      border-radius: 8px 8px 0 0;
-      font-size: 17px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    td {
-      background: white;
-      padding: 12px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      vertical-align: middle;
-    }
-    tr:hover td {
-      transform: translateY(-2px); /* Hover પર થોડું ઉપર */
-      box-shadow: 0 6px 15px rgba(0, 150, 136, 0.25);
-    }
-    input[type='number'] {
-      width: 100px;
-      padding: 8px;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 14px;
-      text-align: right; /* કિંમત જમણી બાજુ */
-      background-color: #f9f9f9;
-    }
-    input[type='number']:focus {
-      outline: none;
-      border-color: #00796b;
-      box-shadow: 0 0 5px rgba(0, 121, 107, 0.3);
-    }
-    .day {
-      color: #555;
-      font-size: 14px;
-      font-style: italic;
-    }
-    #totalRow td {
-      font-weight: bold;
-      background: #b2dfdb;
-      text-align: right;
-      padding: 15px;
-      border-radius: 0 0 8px 8px; /* નીચેના ખૂણા રાઉન્ડ */
-      box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.08);
-    }
-    #totalRow td:first-child {
-      text-align: left;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ધંધાકીય હિસાબ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    /* સામાન્ય બટન સ્ટાઇલ */
-    button {
-      background: #004d40;
-      color: white;
-      border: none;
-      padding: 10px 16px; 
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px; /* Icon અને text વચ્ચે ગેપ, જો ટેક્સ્ટ હોય તો */
-    }
-    button:hover {
-      background-color: #00796b;
-      transform: translateY(-1px);
-    }
-    button:active {
-      transform: translateY(0);
-    }
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3HCJPE50TP"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
 
-    /* .control-buttons માંના બટનો માટે નવી સ્ટાઇલ */
-    .control-buttons button {
-        width: 45px; /* બટનની ચોક્કસ પહોળાઈ */
-        height: 45px; /* બટનની ચોક્કસ ઊંચાઈ */
-        border-radius: 50%; /* ગોળાકાર આકાર */
-        font-size: 20px; /* આઇકન સાઇઝ */
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* થોડો શેડો */
-        background-color: #00796b; /* બટનનો કલર */
-        flex-shrink: 0; /* નાના સ્ક્રીન પર સંકોચાશે નહીં */
-    }
-    .control-buttons button:hover {
-        background-color: #004d40;
-    }
+        gtag('config', 'G-3HCJPE50TP'); // અહીં તમારો Measurement ID આવે છે
+    </script>
 
-    /* Action buttons in table (જે પહેલાથી હતા) */
-    td button {
-      padding: 6px 8px; /* ઘટાડેલું padding */
-      font-size: 14px;
-      border-radius: 6px;
-    }
-    button.add-btn {
-      background-color: #a5d6a7; /* Light green */
-      color: #2e7d32; /* Dark green text */
-    }
-    button.add-btn:hover {
-      background-color: #81c784;
-    }
-    button.clear-btn {
-      background-color: #ef9a9a; /* Light red */
-      color: #c62828; /* Dark red text */
-    }
-    button.clear-btn:hover {
-      background-color: #e57373;
-    }
-
-    dialog {
-      border: none;
-      border-radius: 12px;
-      padding: 25px;
-      width: 95%;
-      max-width: 450px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-      background: #ffffff;
-      animation: fadeIn 0.3s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    dialog h3 {
-      text-align: center;
-      color: #004d40;
-      margin-top: 0;
-      margin-bottom: 20px;
-      font-size: 24px;
-    }
-    .entry {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .entry input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 15px;
-    }
-    .dialog-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .dialog-buttons button {
-      padding: 10px 20px;
-      font-size: 15px;
-    }
-    .dialog-buttons button.save {
-      background-color: #2e7d32;
-    }
-    .dialog-buttons button.save:hover {
-      background-color: #388e3c;
-    }
-    .dialog-buttons button.close {
-      background-color: #d32f2f;
-    }
-    .dialog-buttons button.close:hover {
-      background-color: #e53935;
-    }
-
-    /* New styles for Special Entry Dialog */
-    #specialEntryDialog {
-        max-width: 600px;
-    }
-    #specialEntryContent {
-        max-height: 400px; /* સ્ક્રોલ કરવા માટે */
-        overflow-y: auto;
-        padding-right: 10px; /* સ્ક્રોલબાર માટે જગ્યા */
-    }
-    .special-entry-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        padding: 5px 0;
-        border-bottom: 1px dashed #eee;
-    }
-    .special-entry-row:last-child {
-        border-bottom: none;
-    }
-    .special-entry-row .date {
-        font-weight: bold;
-        color: #555;
-        flex-basis: 30%; /* તારીખ માટે જગ્યા */
-    }
-    .special-entry-row input[type="number"] {
-        flex-basis: 60%; /* કિંમત માટે જગ્યા */
-        text-align: right;
-        font-size: 16px;
-        padding: 8px;
-    }
-    #specialEntryTotal {
-        font-size: 20px;
-        font-weight: bold;
-        text-align: right;
-        margin-top: 15px;
-        color: #004d40;
-    }
-    #specialEntryTotal span {
-        color: #2e7d32; /* Total amount color */
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 15px;
-      }
-      h1 {
-        font-size: 26px;
-      }
-      .controls {
-        flex-direction: column; /* નાના સ્ક્રીન પર ફરીથી કોલમ લેઆઉટ */
-        align-items: stretch; /* અને સ્ટ્રેચ કરો */
-      }
-      .month-picker-container { /* નાના સ્ક્રીન પર સંપૂર્ણ પહોળાઈ */
-        width: 100%;
-        min-width: unset;
-        margin-right: 0; /* નાના સ્ક્રીન પર extra margin remove કરો */
-      }
-      select, input[type='month'] {
-        width: 100%;
-        max-width: unset; /* નાના સ્ક્રીન પર max-width remove કરો */
-        margin-top: 5px;
-      }
-      .control-buttons {
-          width: 100%;
-          justify-content: space-around; /* નાના સ્ક્રીન પર બટનોને સમાન રીતે વિતરિત કરો */
-          margin-top: 10px;
-          align-self: unset; /* નાના સ્ક્રીન પર align-self કાઢી નાખો */
-      }
-      .control-buttons button {
-          width: 40px; 
-          height: 40px;
-          font-size: 18px; 
-      }
-      table {
-        margin-top: 15px;
-      }
-      th, td {
-        padding: 10px;
-        font-size: 14px;
-      }
-      input[type='number'] {
-        width: 70px;
-        font-size: 13px;
-        padding: 6px;
-      }
-      .day {
-        display: block;
-        margin-top: 2px;
-      }
-      td button {
-        padding: 6px 8px;
-        font-size: 12px;
-      }
-      dialog {
-        padding: 15px;
-      }
-      dialog h3 {
-        font-size: 20px;
-        margin-bottom: 15px;
-      }
-      .entry input {
-        font-size: 14px;
-        padding: 8px;
-      }
-      .dialog-buttons {
-        flex-direction: column;
-        gap: 8px;
-      }
-      .dialog-buttons button {
-        width: 100%;
-      }
-      .special-entry-row .date, .special-entry-row input[type="number"] {
-        flex-basis: 48%; /* નાના સ્ક્રીન માટે */
-      }
-    }
-  </style>
-</head>
-<body>
-  <h1>ધંધાકીય હિસાબ</h1>
-
-  <div class="controls">
-    <div class="month-picker-container"> 
-      <label for="monthPicker">મહિનો પસંદ કરો:</label>
-      <input type="month" id="monthPicker" />
-    </div>
-    <div class="control-buttons">
-      <button id="showTotalBtn" title="કુલ ટોટલ બતાવો"><i class="fas fa-calculator"></i></button>
-      <button id="openSpecialEntryBtn" title="ખાસ એન્ટ્રી"><i class="fas fa-edit"></i></button> 
-    </div>
-  </div>
-
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>તારીખ</th>
-        <th>દિવસ</th>
-        <th>આવક ₹</th>
-        <th>ખર્ચ ₹</th>
-        <th>આવક વિગત</th>
-        <th>ખર્ચ વિગત</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot></tfoot>
-  </table>
-
-  <dialog id="detailDialog">
-    <h3 id="dialogTitle"></h3>
-    <div id="entryList"></div>
-    <button onclick="addEntry()"><i class="fas fa-plus-circle"></i> ઉમેરો</button>
-    <div class="dialog-buttons">
-      <button class="save" onclick="saveEntries()"><i class="fas fa-save"></i> સાચવો</button>
-      <button class="close" onclick="detailDialog.close()"><i class="fas fa-times-circle"></i> બંધ કરો</button>
-    </div>
-  </dialog>
-
-  <dialog id="specialEntryDialog">
-    <h3>ખાસ એન્ટ્રી - રકમ દાખલ કરો</h3>
-    <div id="specialEntryContent">
-      </div>
-    <div id="specialEntryTotal">કુલ રકમ: <span>₹ 0.00</span></div>
-    <div class="dialog-buttons">
-      <button class="save" onclick="saveSpecialEntries()"><i class="fas fa-save"></i> સાચવો અને અપડેટ કરો</button>
-      <button class="close" onclick="specialEntryDialog.close()"><i class="fas fa-times-circle"></i> બંધ કરો</button>
-    </div>
-  </dialog>
-
-  <script>
-    const monthPicker = document.getElementById('monthPicker');
-    const tableBody = document.querySelector('#dataTable tbody');
-    const tableFoot = document.querySelector('#dataTable tfoot');
-    const showTotalBtn = document.getElementById('showTotalBtn');
-    const openSpecialEntryBtn = document.getElementById('openSpecialEntryBtn'); 
-    const detailDialog = document.getElementById('detailDialog');
-    const entryList = document.getElementById('entryList');
-    const dialogTitle = document.getElementById('dialogTitle');
-
-    const specialEntryDialog = document.getElementById('specialEntryDialog'); 
-    const specialEntryContent = document.getElementById('specialEntryContent'); 
-    const specialEntryTotal = document.getElementById('specialEntryTotal').querySelector('span'); 
-
-    let data = JSON.parse(localStorage.getItem('businessData') || '{}');
-    let currentDate = '', currentType = '';
-
-    const days = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'];
-
-    // ઇવેન્ટ લિસનર્સ
-    monthPicker.addEventListener('change', generateTable);
-    showTotalBtn.addEventListener('click', showTotals);
-    openSpecialEntryBtn.addEventListener('click', openSpecialEntryDialog); 
-
-    // ડિફોલ્ટ મહિનો સેટ કરો અને ટેબલ જનરેટ કરો
-    monthPicker.value = new Date().toISOString().slice(0, 7);
-    generateTable();
-
-    // મુખ્ય ટેબલ જનરેટ કરવાનું ફંક્શન
-    function generateTable() {
-      const [year, month] = monthPicker.value.split('-');
-      // month - 1 કારણ કે JavaScript માં મહિના 0-indexed હોય છે (જાન્યુઆરી = 0)
-      const totalDays = new Date(year, month, 0).getDate(); 
-      tableBody.innerHTML = ''; // ટેબલ બોડી ખાલી કરો
-      tableFoot.innerHTML = ''; // ટોટલ રો ખાલી કરો
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dateObj = new Date(year, month - 1, day); 
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const displayDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`; 
-        const dayName = days[dateObj.getDay()];
-        const income = data[dateStr]?.income || 0;
-        const expense = data[dateStr]?.expense || 0;
-
-        const row = document.createElement('tr');
-        // જો દિવસ રવિવાર હોય તો ખાસ CSS ક્લાસ ઉમેરો
-        if (dayName === 'રવિવાર') row.classList.add('sunday');
-
-        row.innerHTML = `
-          <td>${displayDate}</td>
-          <td class="day">${dayName}</td>
-          <td><input id="income-${dateStr}" type="number" value="${income}" class="income-color" readonly /></td>
-          <td><input id="expense-${dateStr}" type="number" value="${expense}" class="expense-color" readonly /></td>
-          <td>
-            <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'income')"><i class="fas fa-plus"></i></button>
-            <button class="clear-btn" onclick="clearDetails('${dateStr}', 'income')"><i class="fas fa-minus"></i></button>
-          </td>
-          <td>
-            <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'expense')"><i class="fas fa-plus"></i></button>
-            <button class="clear-btn" onclick="clearDetails('${dateStr}', 'expense')"><i class="fas fa-minus"></i></button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      }
-      showTotals(); // ટેબલ બન્યા પછી તરત ટોટલ બતાવો
-    }
-
-    // વિગતવાર એન્ટ્રી ડાયલોગ ખોલવા માટેનું ફંક્શન
-    function openDetailDialog(date, type) {
-      currentDate = date;
-      currentType = type;
-      dialogTitle.textContent = `${type === 'income' ? 'આવક' : 'ખર્ચ'} વિગત (${formatDateForDialog(date)})`;
-      entryList.innerHTML = ''; // એન્ટ્રી લિસ્ટ ખાલી કરો
-
-      const entries = data[date]?.[`${type}_details`] || [];
-      for (const entry of entries) {
-        const div = document.createElement('div');
-        div.className = 'entry';
-        div.innerHTML = `
-          <input type="text" placeholder="વિગત દાખલ કરો" value="${entry.detail}" />
-          <input type="number" placeholder="કિંમત દાખલ કરો" value="${entry.price}" />
-        `;
-        entryList.appendChild(div);
-      }
-
-      addEntry(); // હંમેશા એક નવી ખાલી લાઇન ઉમેરો જેથી યુઝર સરળતાથી નવી એન્ટ્રી કરી શકે
-      detailDialog.showModal();
-    }
-
-    // તારીખને DD/MM/YYYY ફોર્મેટમાં ફોર્મેટ કરવા માટેનું ફંક્શન
-    function formatDateForDialog(dateStr) {
-        const [year, month, day] = dateStr.split('-');
-        return `${day}/${month}/${year}`;
-    }
-
-    // વિગતવાર એન્ટ્રી ડાયલોગમાં નવી એન્ટ્રી લાઇન ઉમેરવા માટેનું ફંક્શન
-    function addEntry() {
-      const div = document.createElement('div');
-      div.className = 'entry';
-      div.innerHTML = `
-        <input type="text" placeholder="વિગત દાખલ કરો" />
-        <input type="number" placeholder="કિંમત દાખલ કરો" />
-      `;
-      entryList.appendChild(div);
-    }
-
-    // વિગતવાર એન્ટ્રી ડાયલોગમાંથી ડેટા સાચવવા માટેનું ફંક્શન
-    function saveEntries() {
-      const entries = [];
-      let total = 0;
-      const entryDivs = entryList.querySelectorAll('.entry');
-      entryDivs.forEach(div => {
-        const detailInput = div.children[0];
-        const priceInput = div.children[1];
-        const detail = detailInput.value.trim();
-        const price = parseFloat(priceInput.value); 
-
-        // ખાલી વિગત અથવા કિંમત (શૂન્ય અથવા નેગેટિવ) હોય તો તેને ignore કરો
-        if (detail && !isNaN(price) && price > 0) {
-          entries.push({ detail, price });
-          total += price;
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #f3f4f6, #e0f7fa);
+            padding: 20px;
+            color: #333;
         }
-      });
-
-      if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate][`${currentType}_details`] = entries;
-      data[currentDate][currentType] = total;
-
-      localStorage.setItem('businessData', JSON.stringify(data));
-      detailDialog.close();
-      generateTable(); // ટેબલ ફરીથી જનરેટ કરો જેથી અપડેટ થયેલ કિંમતો દેખાય
-    }
-
-    // વિગતવાર એન્ટ્રી સાફ કરવા માટેનું ફંક્શન
-    function clearDetails(date, type) {
-      if (confirm(`શું તમે ${formatDateForDialog(date)} ની ${type === 'income' ? 'આવક' : 'ખર્ચ'} વિગતો સાફ કરવા માંગો છો?`)) {
-        if (data[date]) {
-          delete data[date][`${type}_details`];
-          data[date][type] = 0; // કિંમત 0 કરો
-          localStorage.setItem('businessData', JSON.stringify(data));
-          generateTable();
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 32px;
+            background: linear-gradient(to right, #00796b, #004d40);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
         }
-      }
-    }
-
-    // કુલ આવક અને ખર્ચ બતાવવા માટેનું ફંક્શન
-    function showTotals() {
-      const [year, month] = monthPicker.value.split('-');
-      const totalDays = new Date(year, month, 0).getDate();
-
-      let totalIncome = 0;
-      let totalExpense = 0;
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        if (data[dateStr]) {
-          totalIncome += data[dateStr].income || 0;
-          totalExpense += data[dateStr].expense || 0;
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            justify-content: flex-start;
         }
-      }
-
-      tableFoot.innerHTML = `
-        <tr id="totalRow">
-          <td colspan="2">કુલ ટોટલ</td>
-          <td>₹ ${totalIncome.toFixed(2)}</td>
-          <td>₹ ${totalExpense.toFixed(2)}</td>
-          <td colspan="2"></td>
-        </tr>
-      `;
-
-      // **નવો ઉમેરેલો કોડ: કુલ ટોટલ રો પર સ્ક્રોલ કરવા માટે**
-      const totalRowElement = document.getElementById('totalRow');
-      if (totalRowElement) {
-        totalRowElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }
-    }
-
-    // --- નવું ફંક્શન: ખાસ એન્ટ્રી ડાયલોગ ખોલવા માટે ---
-    function openSpecialEntryDialog() {
-        const [year, month] = monthPicker.value.split('-');
-        const totalDays = new Date(year, month, 0).getDate();
-        specialEntryContent.innerHTML = '';
-        let currentMonthTotal = 0;
-
-        for (let day = 1; day <= totalDays; day++) {
-            const dateObj = new Date(year, month - 1, day); 
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const displayDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
-            
-            // જો ખાસ એન્ટ્રીનો ડેટા હોય તો લોડ કરો, નહીંતર 0
-            const specialValue = data[dateStr]?.specialEntry || 0; 
-            currentMonthTotal += specialValue;
-
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'special-entry-row';
-            rowDiv.innerHTML = `
-                <div class="date">${displayDate}</div>
-                <input type="number" id="special-${dateStr}" value="${specialValue}" oninput="calculateSpecialTotal()" />
-            `;
-            specialEntryContent.appendChild(rowDiv);
+        .month-picker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 200px;
+            margin-right: 10px;
         }
-        specialEntryTotal.textContent = `₹ ${currentMonthTotal.toFixed(2)}`;
-        specialEntryDialog.showModal();
-    }
+        .controls label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: #004d40;
+        }
+        select, input[type='month'] {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #a7d9d5;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            background-color: #ffffff;
+            width: auto;
+            max-width: 250px;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+            align-self: flex-end;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-top: 20px;
+        }
+        th {
+            background: #004d40;
+            color: white;
+            padding: 14px;
+            text-align: left;
+            border-radius: 8px 8px 0 0;
+            font-size: 17px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            background: white;
+            padding: 12px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            vertical-align: middle;
+        }
+        tr:hover td {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 150, 136, 0.25);
+        }
+        input[type='number'] {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: right;
+            background-color: #f9f9f9;
+        }
+        input[type='number']:focus {
+            outline: none;
+            border-color: #00796b;
+            box-shadow: 0 0 5px rgba(0, 121, 107, 0.3);
+        }
+        .day {
+            color: #555;
+            font-size: 14px;
+            font-style: italic;
+        }
+        #totalRow td {
+            font-weight: bold;
+            background: #b2dfdb;
+            text-align: right;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.08);
+        }
+        #totalRow td:first-child {
+            text-align: left;
+        }
+        
+        button {
+            background: #004d40;
+            color: white;
+            border: none;
+            padding: 10px 16px; 
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        button:hover {
+            background-color: #00796b;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
 
-    // --- નવું ફંક્શન: ખાસ એન્ટ્રીનો ટોટલ ગણવા માટે ---
-    function calculateSpecialTotal() {
-        let total = 0;
-        const inputElements = specialEntryContent.querySelectorAll('input[type="number"]');
-        inputElements.forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
-        specialEntryTotal.textContent = `₹ ${total.toFixed(2)}`;
-    }
+        .control-buttons button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            background-color: #00796b;
+            flex-shrink: 0;
+        }
+        .control-buttons button:hover {
+            background-color: #004d40;
+        }
 
-    // --- નવું ફંક્શન: ખાસ એન્ટ્રી ડેટા સાચવવા માટે ---
-    function saveSpecialEntries() {
-        const [year, month] = monthPicker.value.split('-');
-        const totalDays = new Date(year, month, 0).getDate();
+        td button {
+            padding: 6px 8px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+        button.add-btn {
+            background-color: #a5d6a7;
+            color: #2e7d32;
+        }
+        button.add-btn:hover {
+            background-color: #81c784;
+        }
+        button.clear-btn {
+            background-color: #ef9a9a;
+            color: #c62828;
+        }
+        button.clear-btn:hover {
+            background-color: #e57373;
+        }
 
-        for (let day = 1; day <= totalDays; day++) {
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const inputElement = document.getElementById(`special-${dateStr}`);
-            
-            if (inputElement) {
-                const value = parseFloat(inputElement.value) || 0;
-                if (!data[dateStr]) data[dateStr] = {};
-                data[dateStr].specialEntry = value; // નવી પ્રોપર્ટી તરીકે સ્ટોર કરો
+        dialog {
+            border: none;
+            border-radius: 12px;
+            padding: 25px;
+            width: 95%;
+            max-width: 450px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            background: #ffffff;
+            animation: dialogPopIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        dialog.closing {
+            animation: dialogPopOut 0.3s ease-out forwards;
+        }
+
+        dialog h3 {
+            text-align: center;
+            color: #004d40;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .entry {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .entry input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .dialog-buttons button {
+            padding: 10px 20px;
+            font-size: 15px;
+        }
+        .dialog-buttons button.save {
+            background-color: #2e7d32;
+        }
+        .dialog-buttons button.save:hover {
+            background-color: #388e3c;
+        }
+        .dialog-buttons button.close {
+            background-color: #d32f2f;
+        }
+        .dialog-buttons button.close:hover {
+            background-color: #e53935;
+        }
+
+        #specialEntryDialog {
+            max-width: 600px;
+        }
+        #specialEntryContent {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .special-entry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .special-entry-row:last-child {
+            border-bottom: none;
+        }
+        .special-entry-row .date {
+            font-weight: bold;
+            color: #555;
+            flex-basis: 30%;
+        }
+        .special-entry-row input[type="number"] {
+            flex-basis: 60%;
+            text-align: right;
+            font-size: 16px;
+            padding: 8px;
+        }
+        #specialEntryTotal {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+            color: #004d40;
+        }
+        #specialEntryTotal span {
+            color: #2e7d32;
+        }
+
+        /* Password Dialog Styles */
+        .password-dialog {
+            border: none;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            background: #ffffff;
+            text-align: center;
+            z-index: 1000;
+            animation: dialogPopIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .password-dialog.closing {
+            animation: dialogPopOut 0.3s ease-out forwards;
+        }
+
+        @keyframes dialogPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
-        localStorage.setItem('businessData', JSON.stringify(data));
-        specialEntryDialog.close();
-        alert('ખાસ એન્ટ્રી ડેટા સફળતાપૂર્વક સાચવવામાં આવ્યો છે!');
-    }
 
-  </script>
+        @keyframes dialogPopOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        .password-dialog h3 {
+            color: #004d40;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .password-dialog input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .password-dialog button {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 18px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .password-dialog button:hover {
+            background-color: #004d40;
+        }
+        /* Hide main content until password is entered */
+        #main-content {
+            display: none; 
+        }
+        /* When dialog is open, prevent body scroll */
+        body.dialog-open {
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 26px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .month-picker-container {
+                width: 100%;
+                min-width: unset;
+                margin-right: 0;
+            }
+            select, input[type='month'] {
+                width: 100%;
+                max-width: unset;
+                margin-top: 5px;
+            }
+            .control-buttons {
+                width: 100%;
+                justify-content: space-around;
+                margin-top: 10px;
+                align-self: unset;
+            }
+            .control-buttons button {
+                width: 40px; 
+                height: 40px;
+                font-size: 18px; 
+            }
+            table {
+                margin-top: 15px;
+            }
+            th, td {
+                padding: 10px;
+                font-size: 14px;
+            }
+            input[type='number'] {
+                width: 70px;
+                font-size: 13px;
+                padding: 6px;
+            }
+            .day {
+                display: block;
+                margin-top: 2px;
+            }
+            td button {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            dialog {
+                padding: 15px;
+            }
+            dialog h3 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            .entry input {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .dialog-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .dialog-buttons button {
+                width: 100%;
+            }
+            .special-entry-row .date, .special-entry-row input[type="number"] {
+                flex-basis: 48%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ધંધાકીય હિસાબ</h1>
+
+    <div id="main-content">
+        <div class="controls">
+            <div class="month-picker-container"> 
+                <label for="monthPicker">મહિનો પસંદ કરો:</label>
+                <input type="month" id="monthPicker" />
+            </div>
+            <div class="control-buttons">
+                <button id="showTotalBtn" title="કુલ ટોટલ બતાવો"><i class="fas fa-calculator"></i></button>
+                <button id="openSpecialEntryBtn" title="ખાસ એન્ટ્રી"><i class="fas fa-edit"></i></button> 
+            </div>
+        </div>
+
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>તારીખ</th>
+                    <th>દિવસ</th>
+                    <th>આવક ₹</th>
+                    <th>ખર્ચ ₹</th>
+                    <th>આવક વિગત</th>
+                    <th>ખર્ચ વિગત</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+        </table>
+    </div> <dialog id="detailDialog">
+        <h3 id="dialogTitle"></h3>
+        <div id="entryList"></div>
+        <button onclick="addEntry()"><i class="fas fa-plus-circle"></i> ઉમેરો</button>
+        <div class="dialog-buttons">
+            <button class="save" onclick="saveEntries()"><i class="fas fa-save"></i> સાચવો</button>
+            <button class="close" onclick="closeDetailDialog()"><i class="fas fa-times-circle"></i> બંધ કરો</button>
+        </div>
+    </dialog>
+
+    <dialog id="specialEntryDialog">
+        <h3>ખાસ એન્ટ્રી - રકમ દાખલ કરો</h3>
+        <div id="specialEntryContent">
+        </div>
+        <div id="specialEntryTotal">કુલ રકમ: <span>₹ 0.00</span></div>
+        <div class="dialog-buttons">
+            <button class="save" onclick="saveSpecialEntries()"><i class="fas fa-save"></i> સાચવો અને અપડેટ કરો</button>
+            <button class="close" onclick="closeSpecialEntryDialog()"><i class="fas fa-times-circle"></i> બંધ કરો</button>
+        </div>
+    </dialog>
+
+    <dialog id="passwordDialog" class="password-dialog">
+        <h3>પાસવર્ડ દાખલ કરો</h3>
+        <input type="password" id="passwordInput" placeholder="પાસવર્ડ દાખલ કરો" />
+        <p id="passwordError" style="color: red; display: none; margin-top: 5px;">ખોટો પાસવર્ડ.</p>
+        <button id="loginButton" style="margin-top: 15px;">લોગિન</button>
+    </dialog>
+
+    <dialog id="setPasswordDialog" class="password-dialog">
+        <h3>નવો પાસવર્ડ સેટ કરો</h3>
+        <p>આ એપ પહેલીવાર ખોલી રહ્યા છો. કૃપા કરીને એક પાસવર્ડ સેટ કરો.</p>
+        <input type="password" id="newPasswordInput" placeholder="નવો પાસવર્ડ" />
+        <input type="password" id="confirmPasswordInput" placeholder="પાસવર્ડ ફરી દાખલ કરો" style="margin-top: 10px;" />
+        <p id="setPasswordError" style="color: red; display: none; margin-top: 5px;">પાસવર્ડ મેચ થતો નથી અથવા ખાલી છે.</p>
+        <button id="setNewPasswordButton" style="margin-top: 15px;">પાસવર્ડ સેટ કરો</button>
+    </dialog>
+    <script>
+        const monthPicker = document.getElementById('monthPicker');
+        const tableBody = document.querySelector('#dataTable tbody');
+        const tableFoot = document.querySelector('#dataTable tfoot');
+        const showTotalBtn = document.getElementById('showTotalBtn');
+        const openSpecialEntryBtn = document.getElementById('openSpecialEntryBtn'); 
+        const detailDialog = document.getElementById('detailDialog');
+        const entryList = document.getElementById('entryList');
+        const dialogTitle = document.getElementById('dialogTitle');
+
+        const specialEntryDialog = document.getElementById('specialEntryDialog'); 
+        const specialEntryContent = document.getElementById('specialEntryContent'); 
+        const specialEntryTotal = document.getElementById('specialEntryTotal').querySelector('span'); 
+
+        // પાસવર્ડ સંબંધિત DOM elements
+        const passwordDialog = document.getElementById('passwordDialog');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordError = document.getElementById('passwordError');
+        const loginButton = document.getElementById('loginButton');
+
+        const setPasswordDialog = document.getElementById('setPasswordDialog');
+        const newPasswordInput = document.getElementById('newPasswordInput');
+        const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+        const setPasswordError = document.getElementById('setPasswordError');
+        const setNewPasswordButton = document.getElementById('setNewPasswordButton');
+
+        const mainContent = document.getElementById('main-content'); // Main content div
+
+        let data = JSON.parse(localStorage.getItem('businessData') || '{}');
+        let storedPassword = localStorage.getItem('appPassword');
+        let currentDate = '', currentType = '';
+
+        const days = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'];
+
+        // ઇવેન્ટ લિસનર્સ (ફક્ત જ્યારે મુખ્ય કન્ટેન્ટ દેખાય ત્યારે જ સક્રિય થાય)
+        monthPicker.addEventListener('change', generateTable);
+        showTotalBtn.addEventListener('click', showTotals);
+        openSpecialEntryBtn.addEventListener('click', openSpecialEntryDialog); 
+
+        // પાસવર્ડ લોજિક
+        function checkPasswordStatus() {
+            if (!storedPassword) {
+                setPasswordDialog.showModal();
+                document.body.classList.add('dialog-open');
+                newPasswordInput.focus(); // Focus on the first input
+            } else {
+                passwordDialog.showModal();
+                document.body.classList.add('dialog-open');
+                passwordInput.focus(); // Focus on the password input
+            }
+        }
+
+        // પાસવર્ડ સેટ કરવા માટેનું ફંક્શન
+        setNewPasswordButton.addEventListener('click', () => {
+            const newPass = newPasswordInput.value.trim();
+            const confirmPass = confirmPasswordInput.value.trim();
+
+            if (newPass && newPass === confirmPass) {
+                localStorage.setItem('appPassword', newPass);
+                storedPassword = newPass;
+                
+                setPasswordDialog.classList.add('closing');
+                setPasswordDialog.addEventListener('animationend', () => {
+                    setPasswordDialog.close();
+                    setPasswordDialog.classList.remove('closing');
+                    document.body.classList.remove('dialog-open');
+                    showMainContent(); // Show main content after setting password
+                }, { once: true });
+                
+            } else {
+                setPasswordError.textContent = 'પાસવર્ડ મેચ થતો નથી અથવા ખાલી છે.';
+                setPasswordError.style.display = 'block';
+            }
+        });
+
+        // લોગિન કરવા માટેનું ફંક્શન
+        loginButton.addEventListener('click', () => {
+            const enteredPassword = passwordInput.value.trim();
+            if (enteredPassword === storedPassword) {
+                passwordDialog.classList.add('closing');
+                passwordDialog.addEventListener('animationend', () => {
+                    passwordDialog.close();
+                    passwordDialog.classList.remove('closing');
+                    document.body.classList.remove('dialog-open');
+                    showMainContent(); // Show main content after successful login
+                }, { once: true });
+
+            } else {
+                passwordError.textContent = 'ખોટો પાસવર્ડ.';
+                passwordError.style.display = 'block';
+                passwordInput.value = ''; // Clear password field
+                passwordInput.focus(); // Refocus for retry
+            }
+        });
+
+        // એન્ટર કી દબાવવાથી પણ લોગિન થવું જોઈએ
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+
+        newPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                confirmPasswordInput.focus();
+            }
+        });
+
+        confirmPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                setNewPasswordButton.click();
+            }
+        });
+
+        // મુખ્ય કન્ટેન્ટ બતાવવા માટેનું નવું ફંક્શન
+        function showMainContent() {
+            mainContent.style.display = 'block'; // મુખ્ય કન્ટેન્ટ દેખાય
+            monthPicker.value = new Date().toISOString().slice(0, 7); // ડિફોલ્ટ મહિનો સેટ કરો
+            generateTable(); // ટેબલ જનરેટ કરો
+        }
+
+        // પેજ લોડ થાય ત્યારે પાસવર્ડની સ્થિતિ તપાસો
+        window.addEventListener('load', checkPasswordStatus);
+
+        // મુખ્ય ટેબલ જનરેટ કરવાનું ફંક્શન
+        function generateTable() {
+            const [year, month] = monthPicker.value.split('-');
+            const totalDays = new Date(year, month, 0).getDate(); 
+            tableBody.innerHTML = '';
+            tableFoot.innerHTML = '';
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateObj = new Date(year, month - 1, day); 
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const displayDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`; 
+                const dayName = days[dateObj.getDay()];
+                const income = data[dateStr]?.income || 0;
+                const expense = data[dateStr]?.expense || 0;
+
+                const row = document.createElement('tr');
+                if (dayName === 'રવિવાર') row.classList.add('sunday');
+
+                row.innerHTML = `
+                    <td>${displayDate}</td>
+                    <td class="day">${dayName}</td>
+                    <td><input id="income-${dateStr}" type="number" value="${income}" class="income-color" readonly /></td>
+                    <td><input id="expense-${dateStr}" type="number" value="${expense}" class="expense-color" readonly /></td>
+                    <td>
+                        <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'income')"><i class="fas fa-plus"></i></button>
+                        <button class="clear-btn" onclick="clearDetails('${dateStr}', 'income')"><i class="fas fa-minus"></i></button>
+                    </td>
+                    <td>
+                        <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'expense')"><i class="fas fa-plus"></i></button>
+                        <button class="clear-btn" onclick="clearDetails('${dateStr}', 'expense')"><i class="fas fa-minus"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+            showTotals();
+        }
+
+        // વિગતવાર એન્ટ્રી ડાયલોગ ખોલવા માટેનું ફંક્શન
+        function openDetailDialog(date, type) {
+            currentDate = date;
+            currentType = type;
+            dialogTitle.textContent = `${type === 'income' ? 'આવક' : 'ખર્ચ'} વિગત (${formatDateForDialog(date)})`;
+            entryList.innerHTML = '';
+
+            const entries = data[date]?.[`${type}_details`] || [];
+            for (const entry of entries) {
+                const div = document.createElement('div');
+                div.className = 'entry';
+                div.innerHTML = `
+                    <input type="text" placeholder="વિગત દાખલ કરો" value="${entry.detail}" />
+                    <input type="number" placeholder="કિંમત દાખલ કરો" value="${entry.price}" />
+                `;
+                entryList.appendChild(div);
+            }
+
+            addEntry();
+            detailDialog.showModal();
+        }
+
+        // તારીખને DD/MM/YYYY ફોર્મેટમાં ફોર્મેટ કરવા માટેનું ફંક્શન
+        function formatDateForDialog(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // વિગતવાર એન્ટ્રી ડાયલોગમાં નવી એન્ટ્રી લાઇન ઉમેરવા માટેનું ફંક્શન
+        function addEntry() {
+            const div = document.createElement('div');
+            div.className = 'entry';
+            div.innerHTML = `
+                <input type="text" placeholder="વિગત દાખલ કરો" />
+                <input type="number" placeholder="કિંમત દાખલ કરો" />
+            `;
+            entryList.appendChild(div);
+            // Focus on the new input field
+            div.querySelector('input[type="text"]').focus();
+        }
+
+        // વિગતવાર એન્ટ્રી ડાયલોગમાંથી ડેટા સાચવવા માટેનું ફંક્શન
+        function saveEntries() {
+            const entries = [];
+            let total = 0;
+            const entryDivs = entryList.querySelectorAll('.entry');
+            entryDivs.forEach(div => {
+                const detailInput = div.children[0];
+                const priceInput = div.children[1];
+                const detail = detailInput.value.trim();
+                const price = parseFloat(priceInput.value); 
+
+                if (detail && !isNaN(price) && price > 0) {
+                    entries.push({ detail, price });
+                    total += price;
+                }
+            });
+
+            if (!data[currentDate]) data[currentDate] = {};
+            data[currentDate][`${currentType}_details`] = entries;
+            data[currentDate][currentType] = total;
+
+            localStorage.setItem('businessData', JSON.stringify(data));
+            closeDetailDialog();
+            generateTable();
+        }
+
+        // વિગતવાર એન્ટ્રી ડાયલોગને એનિમેશન સાથે બંધ કરવા માટેનું ફંક્શન
+        function closeDetailDialog() {
+            detailDialog.classList.add('closing');
+            detailDialog.addEventListener('animationend', () => {
+                detailDialog.close();
+                detailDialog.classList.remove('closing');
+            }, { once: true });
+        }
+
+        // વિગતવાર એન્ટ્રી સાફ કરવા માટેનું ફંક્શન
+        function clearDetails(date, type) {
+            if (confirm(`શું તમે ${formatDateForDialog(date)} ની ${type === 'income' ? 'આવક' : 'ખર્ચ'} વિગતો સાફ કરવા માંગો છો?`)) {
+                if (data[date]) {
+                    delete data[date][`${type}_details`];
+                    data[date][type] = 0;
+                    localStorage.setItem('businessData', JSON.stringify(data));
+                    generateTable();
+                }
+            }
+        }
+
+        // કુલ આવક અને ખર્ચ બતાવવા માટેનું ફંક્શન
+        function showTotals() {
+            const [year, month] = monthPicker.value.split('-');
+            const totalDays = new Date(year, month, 0).getDate();
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (data[dateStr]) {
+                    totalIncome += data[dateStr].income || 0;
+                    totalExpense += data[dateStr].expense || 0;
+                }
+            }
+
+            tableFoot.innerHTML = `
+                <tr id="totalRow">
+                    <td colspan="2">કુલ ટોટલ</td>
+                    <td>₹ ${totalIncome.toFixed(2)}</td>
+                    <td>₹ ${totalExpense.toFixed(2)}</td>
+                    <td colspan="2"></td>
+                </tr>
+            `;
+
+            const totalRowElement = document.getElementById('totalRow');
+            if (totalRowElement) {
+                totalRowElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+
+        // ખાસ એન્ટ્રી ડાયલોગ ખોલવા માટે
+        function openSpecialEntryDialog() {
+            const [year, month] = monthPicker.value.split('-');
+            const totalDays = new Date(year, month, 0).getDate();
+            specialEntryContent.innerHTML = '';
+            let currentMonthTotal = 0;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateObj = new Date(year, month - 1, day); 
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const displayDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+                
+                const specialValue = data[dateStr]?.specialEntry || 0; 
+                currentMonthTotal += specialValue;
+
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'special-entry-row';
+                rowDiv.innerHTML = `
+                    <div class="date">${displayDate}</div>
+                    <input type="number" id="special-${dateStr}" value="${specialValue}" oninput="calculateSpecialTotal()" />
+                `;
+                specialEntryContent.appendChild(rowDiv);
+            }
+            specialEntryTotal.textContent = `₹ ${currentMonthTotal.toFixed(2)}`;
+            specialEntryDialog.showModal();
+        }
+
+        // ખાસ એન્ટ્રીનો ટોટલ ગણવા માટે
+        function calculateSpecialTotal() {
+            let total = 0;
+            const inputElements = specialEntryContent.querySelectorAll('input[type="number"]');
+            inputElements.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            specialEntryTotal.textContent = `₹ ${total.toFixed(2)}`;
+        }
+
+        // ખાસ એન્ટ્રી ડેટા સાચવવા માટે
+        function saveSpecialEntries() {
+            const [year, month] = monthPicker.value.split('-');
+            const totalDays = new Date(year, month, 0).getDate();
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const inputElement = document.getElementById(`special-${dateStr}`);
+                
+                if (inputElement) {
+                    const value = parseFloat(inputElement.value) || 0;
+                    if (!data[dateStr]) data[dateStr] = {};
+                    data[dateStr].specialEntry = value;
+                }
+            }
+            localStorage.setItem('businessData', JSON.stringify(data));
+            closeSpecialEntryDialog();
+            alert('ખાસ એન્ટ્રી ડેટા સફળતાપૂર્વક સાચવવામાં આવ્યો છે!');
+        }
+
+        // ખાસ એન્ટ્રી ડાયલોગને એનિમેશન સાથે બંધ કરવા માટે
+        function closeSpecialEntryDialog() {
+            specialEntryDialog.classList.add('closing');
+            specialEntryDialog.addEventListener('animationend', () => {
+                specialEntryDialog.close();
+                specialEntryDialog.classList.remove('closing');
+            }, { once: true });
+        }
+    </script>
 </body>
 </html>
