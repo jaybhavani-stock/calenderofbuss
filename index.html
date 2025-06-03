@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <style>
-/* તમારી સ્ટાઇલશીટ અહીં છે, જે પહેલા છે, તે જ સમાવે છે */
+/* તમારું સ્ટાઇલશીટ અહીં રાખો, જે પહેલું છે */
 body {
     font-family: 'Segoe UI', sans-serif;
     background: linear-gradient(to right, #f3f4f6, #e0f7fa);
@@ -122,7 +122,7 @@ button {
     background: #004d40;
     color: white;
     border: none;
-    padding: 10px 16px; 
+    padding: 10px 16px;
     font-size: 16px;
     border-radius: 8px;
     cursor: pointer;
@@ -281,21 +281,65 @@ body.dialog-open {
     select, input[type='month'] { width: 100%; }
     table { margin-top: 15px; }
 }
+
+/* લોડિંગ સ્પીનર બેકડ્રોપ */
+#loadingSpinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    display: none; /* શરુઆતમાં છુપાયેલું */
+}
+
+/* સ્પીનર એનિમેશન */
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #00796b;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* નવું: બટન સ્ટાઇલ (રિસેટ વગર) */
+button.reset-btn {
+    background-color: #f44336;
+    color: white;
+}
+button.reset-btn:hover {
+    background-color: #d32f2f;
+}
 </style>
 </head>
 <body>
 
 <h1>ધંધાકીય હિસાબ</h1>
 
+<div id="loadingSpinner">
+    <div class="spinner"></div>
+</div>
+
 <div id="main-content">
     <div class="controls">
-        <div class="month-picker-container"> 
+        <div class="month-picker-container">
             <label for="monthPicker">મહિનો પસંદ કરો:</label>
             <input type="month" id="monthPicker" />
         </div>
         <div class="control-buttons">
             <button id="showTotalBtn" title="કુલ ટોટલ બતાવો"><i class="fas fa-calculator"></i></button>
-            <button id="openSpecialEntryBtn" title="ખાસ એન્ટ્રી"><i class="fas fa-edit"></i></button> 
+            <button id="openSpecialEntryBtn" title="ખાસ એન્ટ્રી"><i class="fas fa-edit"></i></button>
+            <!-- રિસેટ બટન હટાવેલ છે -->
+            <!-- <button id="resetDataBtn" title="બધો ડેટા રીસેટ કરો"><i class="fas fa-redo"></i></button> -->
         </div>
     </div>
     <table id="dataTable">
@@ -314,7 +358,6 @@ body.dialog-open {
     </table>
 </div>
 
-<!-- વિગતવાર એન્ટ્રી ડાયલોગ -->
 <dialog id="detailDialog">
     <h3 id="dialogTitle"></h3>
     <div id="entryList"></div>
@@ -325,7 +368,6 @@ body.dialog-open {
     </div>
 </dialog>
 
-<!-- ખાસ એન્ટ્રી ડાયલોગ -->
 <dialog id="specialEntryDialog">
     <h3>ખાસ એન્ટ્રી - રકમ દાખલ કરો</h3>
     <div id="specialEntryContent"></div>
@@ -336,7 +378,6 @@ body.dialog-open {
     </div>
 </dialog>
 
-<!-- પાસવર્ડ લોગિન ડાયલોગ -->
 <dialog id="passwordDialog" class="password-dialog">
     <h3>પાસવર્ડ દાખલ કરો</h3>
     <input type="tel" id="passwordInput" placeholder="પાસવર્ડ દાખલ કરો" pattern="\d*" maxlength="6"/>
@@ -345,7 +386,6 @@ body.dialog-open {
     <button id="forgotPasswordBtn" style="margin-top: 10px; background: none; border: none; color: #d32f2f; cursor: pointer;">પાસવર્ડ ભૂલી ગયા છો?</button>
 </dialog>
 
-<!-- નવા પાસવર્ડ સેટ કરવા માટે -->
 <dialog id="setPasswordDialog" class="password-dialog">
     <h3>નવો પાસવર્ડ સેટ કરો</h3>
     <input type="tel" id="newPasswordInput" placeholder="નવો પાસવર્ડ" pattern="\d*" maxlength="6"/>
@@ -356,19 +396,11 @@ body.dialog-open {
 
 <script>
 // JavaScript કોડ
-
-// માહીતી પ્રારંભિક અને ડિફોલ્ટ
 const monthPicker = document.getElementById('monthPicker');
 const tableBody = document.querySelector('#dataTable tbody');
 const tableFoot = document.querySelector('#dataTable tfoot');
 const showTotalBtn = document.getElementById('showTotalBtn');
 const openSpecialEntryBtn = document.getElementById('openSpecialEntryBtn');
-const detailDialog = document.getElementById('detailDialog');
-const entryList = document.getElementById('entryList');
-const dialogTitle = document.getElementById('dialogTitle');
-const specialEntryDialog = document.getElementById('specialEntryDialog');
-const specialEntryContent = document.getElementById('specialEntryContent');
-const specialEntryTotalSpan = document.querySelector('#specialEntryTotal span');
 
 const passwordDialog = document.getElementById('passwordDialog');
 const passwordInput = document.getElementById('passwordInput');
@@ -382,11 +414,20 @@ const confirmPasswordInput = document.getElementById('confirmPasswordInput');
 const setPasswordError = document.getElementById('setPasswordError');
 const setNewPasswordButton = document.getElementById('setNewPasswordButton');
 
+const loadingSpinner = document.getElementById('loadingSpinner');
+
 let data = JSON.parse(localStorage.getItem('businessData') || '{}');
 let storedPassword = localStorage.getItem('appPassword');
 
-// દિવસોની યાદી
 const days = ['રવિવાર', 'સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર'];
+
+// લોડિંગ સ્પીનર ફંક્શન્સ
+function showLoadingSpinner() {
+    loadingSpinner.style.display = 'flex';
+}
+function hideLoadingSpinner() {
+    loadingSpinner.style.display = 'none';
+}
 
 function checkPasswordStatus() {
     if (!storedPassword) {
@@ -398,7 +439,7 @@ function checkPasswordStatus() {
     }
 }
 
-// લોગિન બટન ક્લિક
+// લોગિન
 loginButton.onclick = () => {
     const enteredPass = passwordInput.value.trim();
     if (enteredPass === storedPassword) {
@@ -411,13 +452,11 @@ loginButton.onclick = () => {
         passwordInput.focus();
     }
 };
-
 passwordInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         loginButton.onclick();
     }
 });
-
 forgotPasswordBtn.onclick = () => {
     if (confirm("શું તમે પાસવર્ડ ફરીથી સેટ કરવા માંગો છો?")) {
         showSetPasswordDialog();
@@ -460,7 +499,6 @@ function closePasswordDialog() {
         document.body.classList.remove('dialog-open');
     }, { once: true });
 }
-
 function closeSetPasswordDialog() {
     setPasswordDialog.classList.add('closing');
     setTimeout(() => {
@@ -474,62 +512,61 @@ window.addEventListener('load', () => {
     checkPasswordStatus();
 });
 
-// MAIN CONTENT
+// મુખ્ય કન્ટેન્ટ બતાવો
 function showMainContent() {
     document.getElementById('main-content').style.display = 'block';
     const today = new Date();
     monthPicker.value = today.toISOString().slice(0, 7);
     generateTable();
-
-    // મહિનો બદલ્યા પછી તેમજ લોડ પર "auto scroll" માટે
     setTimeout(() => {
         const totalRow = document.getElementById('totalRow');
-        if (totalRow) {
-            totalRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (totalRow) totalRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
 }
 
 // મહિનો બદલો
 monthPicker.addEventListener('change', generateTable);
 
-// ટેબલ જનરેટ કરો
+// ટેબલ જનરેટ
 function generateTable() {
-    const [year, month] = monthPicker.value.split('-');
-    const totalDays = new Date(year, month, 0).getDate();
-    tableBody.innerHTML = '';
-    tableFoot.innerHTML = '';
+    showLoadingSpinner();
+    setTimeout(() => {
+        const [year, month] = monthPicker.value.split('-');
+        const totalDays = new Date(year, month, 0).getDate();
+        tableBody.innerHTML = '';
+        tableFoot.innerHTML = '';
 
-    for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const dateObj = new Date(year, month - 1, day);
-        const dayName = days[dateObj.getDay()];
-        const income = data[dateStr]?.income || 0;
-        const expense = data[dateStr]?.expense || 0;
+        for (let day = 1; day <= totalDays; day++) {
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const dateObj = new Date(year, month - 1, day);
+            const dayName = days[dateObj.getDay()];
+            const income = data[dateStr]?.income || 0;
+            const expense = data[dateStr]?.expense || 0;
 
-        const row = document.createElement('tr');
-        if (dayName === 'રવિવાર') row.style.backgroundColor = '#f0f0f0';
+            const row = document.createElement('tr');
+            if (dayName === 'રવિવાર') row.style.backgroundColor = '#f0f0f0';
 
-        row.innerHTML = `
-            <td>${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}</td>
-            <td class="day">${dayName}</td>
-            <td><input id="income-${dateStr}" type="number" value="${income}" readonly /></td>
-            <td><input id="expense-${dateStr}" type="number" value="${expense}" readonly /></td>
-            <td>
-                <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'income')"><i class="fas fa-plus"></i></button>
-                <button class="clear-btn" onclick="clearDetails('${dateStr}', 'income')"><i class="fas fa-minus"></i></button>
-            </td>
-            <td>
-                <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'expense')"><i class="fas fa-plus"></i></button>
-                <button class="clear-btn" onclick="clearDetails('${dateStr}', 'expense')"><i class="fas fa-minus"></i></button>
-            </td>
-        `;
-        tableBody.appendChild(row);
-    }
-    showTotals();
+            row.innerHTML = `
+                <td>${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}</td>
+                <td class="day">${dayName}</td>
+                <td><input id="income-${dateStr}" type="number" value="${income}" readonly /></td>
+                <td><input id="expense-${dateStr}" type="number" value="${expense}" readonly /></td>
+                <td>
+                    <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'income')"><i class="fas fa-plus"></i></button>
+                    <button class="clear-btn" onclick="clearDetails('${dateStr}', 'income')"><i class="fas fa-minus"></i></button>
+                </td>
+                <td>
+                    <button class="add-btn" onclick="openDetailDialog('${dateStr}', 'expense')"><i class="fas fa-plus"></i></button>
+                    <button class="clear-btn" onclick="clearDetails('${dateStr}', 'expense')"><i class="fas fa-minus"></i></button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        }
+        showTotals();
+        hideLoadingSpinner();
+    }, 100);
 }
 
-// ટોટલ બતાવો
 function showTotals() {
     const [year, month] = monthPicker.value.split('-');
     const totalDays = new Date(year, month, 0).getDate();
@@ -552,12 +589,8 @@ function showTotals() {
             <td colspan="2"></td>
         </tr>
     `;
-
-    // "કુલ ટોટલ" પર આપમેળે સ્ક્રોલ
     const totalRow = document.getElementById('totalRow');
-    if (totalRow) {
-        totalRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    if (totalRow) totalRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // વિગતવાર એન્ટ્રી ખોલવા
@@ -571,17 +604,15 @@ function openDetailDialog(date, type) {
     for (const entry of entries) {
         addEntry(entry.detail, entry.price);
     }
-    addEntry(); // એક નવું લાઇન ઉમેરો
-    detailDialog.showModal();
+    addEntry(); // નવી એન્ટ્રી ઉમેરો
+    document.querySelector('#detailDialog').showModal();
 }
 
-// DD/MM/YYYY ફોર્મેટ
 function formatDateForDialog(dateStr) {
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
 }
 
-// નવી એન્ટ્રી ઉમેરવા
 function addEntry(detail = '', price = '') {
     const div = document.createElement('div');
     div.className = 'entry';
@@ -593,12 +624,11 @@ function addEntry(detail = '', price = '') {
     div.querySelector('input[type="text"]').focus();
 }
 
-// એન્ટ્રી સંગ્રહ
 function saveEntries() {
+    showLoadingSpinner();
     const entries = [];
     let total = 0;
-    const allDivs = document.querySelectorAll('.entry');
-    allDivs.forEach(div => {
+    document.querySelectorAll('.entry').forEach(div => {
         const detail = div.children[0].value.trim();
         const price = parseFloat(div.children[1].value);
         if (detail && !isNaN(price) && price > 0) {
@@ -615,60 +645,62 @@ function saveEntries() {
     generateTable();
 }
 
-// બંધ કરો
 function closeDetailDialog() {
-    detailDialog.classList.add('closing');
-    detailDialog.addEventListener('animationend', () => {
-        detailDialog.close();
-        detailDialog.classList.remove('closing');
+    document.getElementById('detailDialog').classList.add('closing');
+    document.getElementById('detailDialog').addEventListener('animationend', () => {
+        document.getElementById('detailDialog').close();
+        document.getElementById('detailDialog').classList.remove('closing');
     }, { once: true });
 }
 
-// સાફ કરો
 function clearDetails(date, type) {
     if (confirm(`શું તમે ${formatDateForDialog(date)} ની ${type === 'income' ? 'આવક' : 'ખર્ચ'} માહિતી સાફ કરવા માંગો છો?`)) {
+        showLoadingSpinner();
         if (data[date]) {
             delete data[date][`${type}_details`];
             data[date][type] = 0;
             localStorage.setItem('businessData', JSON.stringify(data));
             generateTable();
+        } else {
+            hideLoadingSpinner();
         }
     }
 }
 
-// કુલ અને ખર્ચ બતાવો
 showTotalBtn.onclick = showTotals;
 
-// ખાસ એન્ટ્રી ખોલો
 openSpecialEntryBtn.onclick = () => {
     generateSpecialEntries();
 };
 
 function generateSpecialEntries() {
-    const [year, month] = monthPicker.value.split('-');
-    const totalDays = new Date(year, month, 0).getDate();
-    specialEntryContent.innerHTML = '';
-    let totalSum = 0;
+    showLoadingSpinner();
+    setTimeout(() => {
+        const [year, month] = monthPicker.value.split('-');
+        const totalDays = new Date(year, month, 0).getDate();
+        document.getElementById('specialEntryContent').innerHTML = '';
+        let totalSum = 0;
 
-    for (let day = 1; day <= totalDays; day++) {
-        const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const displayDate = `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`;
-        const currentVal = (data[dateStr] && data[dateStr].specialEntry) || 0;
-        totalSum += currentVal;
+        for (let day = 1; day <= totalDays; day++) {
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const displayDate = `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`;
+            const currentVal = (data[dateStr] && data[dateStr].specialEntry) || 0;
+            totalSum += currentVal;
 
-        const div = document.createElement('div');
-        div.className = 'special-entry-row';
-        div.innerHTML = `
-            <div class="date">${displayDate}</div>
-            <input type="number" id="special-${dateStr}" value="${currentVal}" oninput="calculateSpecialTotal()" />
-        `;
-        specialEntryContent.appendChild(div);
-    }
-    specialEntryTotalSpan.textContent = `₹ ${totalSum.toFixed(2)}`;
-    document.getElementById('specialEntryDialog').showModal();
+            const div = document.createElement('div');
+            div.className = 'special-entry-row';
+            div.innerHTML = `
+                <div class="date">${displayDate}</div>
+                <input type="number" id="special-${dateStr}" value="${currentVal}" oninput="calculateSpecialTotal()" />
+            `;
+            document.getElementById('specialEntryContent').appendChild(div);
+        }
+        document.getElementById('specialEntryTotal').querySelector('span').textContent = `₹ ${totalSum.toFixed(2)}`;
+        document.getElementById('specialEntryDialog').showModal();
+        hideLoadingSpinner();
+    }, 100);
 }
 
-// એન્ટર ઓવર
 function calculateSpecialTotal() {
     let total = 0;
     document.querySelectorAll('#specialEntryContent input[type="number"]').forEach(input => {
@@ -677,8 +709,8 @@ function calculateSpecialTotal() {
     document.getElementById('specialEntryTotal').querySelector('span').textContent = `₹ ${total.toFixed(2)}`;
 }
 
-// સાચવો
 function saveSpecialEntries() {
+    showLoadingSpinner();
     const [year, month] = monthPicker.value.split('-');
     const totalDays = new Date(year, month, 0).getDate();
 
@@ -691,9 +723,9 @@ function saveSpecialEntries() {
     localStorage.setItem('businessData', JSON.stringify(data));
     closeSpecialEntryDialog();
     alert('ખાસ એન્ટ્રી સફળતાપૂર્વક સાચવાઈ ગઈ!');
+    generateTable();
 }
 
-// બંધ કરો
 function closeSpecialEntryDialog() {
     document.getElementById('specialEntryDialog').classList.add('closing');
     document.getElementById('specialEntryDialog').addEventListener('animationend', () => {
@@ -702,7 +734,8 @@ function closeSpecialEntryDialog() {
     }, { once: true });
 }
 
-// પેજ લોડ
+// "રિસેટ" બટન નથી, તે માટેનો કોડ હટાવેલ.
+
 window.onload = () => {
     checkPasswordStatus();
 };
